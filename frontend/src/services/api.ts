@@ -7,7 +7,8 @@ import {
 } from '@/types';
 import { generateProductImage } from '@/utils/images';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL =
+  import.meta.env.VITE_API_URL || 'https://mai-store-1.vercel.app';
 
 const ADMIN_TOKEN_KEY = 'mai_admin_token';
 
@@ -16,11 +17,7 @@ function delay(ms: number) {
 }
 
 function isFetchAvailable(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    Boolean(window.fetch) &&
-    Boolean(import.meta.env.VITE_API_URL)
-  );
+  return typeof window !== 'undefined' && Boolean(window.fetch);
 }
 
 async function apiGet<T>(path: string, fallback: T): Promise<T> {
@@ -262,7 +259,7 @@ const MOCK_PRODUCTS: Product[] = [
   ),
   buildProduct(
     'p6',
-    'فستان بيج محتلم كلاسيك',
+    'فستان بيج محتشم كلاسيك',
     'dress',
     580,
     720,
@@ -378,29 +375,32 @@ const MOCK_ORDERS: Order[] = [
 
 export const api = {
   // Products
-  getProducts: () => apiGet<Product[]>('/products', MOCK_PRODUCTS),
+  getProducts: () => apiGet<Product[]>('/api/products', MOCK_PRODUCTS),
   createProduct: (product: Omit<Product, 'id' | 'createdAt'>) =>
-    apiPost<Product>('/products', product, {
+    apiPost<Product>('/api/products', product, {
       ...product,
       id: `p${Date.now()}`,
       createdAt: new Date().toISOString(),
     } as Product),
   updateProduct: (id: string, product: Partial<Product>) =>
-    apiPatch<Product>(`/products/${id}`, product, { ...product, id } as Product),
+    apiPatch<Product>(`/api/products/${id}`, product, {
+      ...product,
+      id,
+    } as Product),
   deleteProduct: (id: string) =>
-    apiDelete<{ success: boolean }>(`/products/${id}`, { success: true }),
+    apiDelete<{ success: boolean }>(`/api/products/${id}`, { success: true }),
 
   // Governorates
   getGovernorates: () =>
-    apiGet<Governorate[]>('/shipping/governorates', MOCK_GOVERNORATES),
+    apiGet<Governorate[]>('/api/shipping/governorates', MOCK_GOVERNORATES),
   updateGovernorate: (id: string, data: Partial<Governorate>) =>
-    apiPatch<Governorate>(`/shipping/governorates/${id}`, data, {
+    apiPatch<Governorate>(`/api/shipping/governorates/${id}`, data, {
       ...data,
       id,
     } as Governorate),
 
   // Orders
-  getOrders: () => apiGet<Order[]>('/orders', MOCK_ORDERS),
+  getOrders: () => apiGet<Order[]>('/api/orders', MOCK_ORDERS),
   createOrder: (
     order: Omit<Order, 'id' | 'orderNumber' | 'status' | 'createdAt'>,
   ) => {
@@ -412,12 +412,12 @@ export const api = {
       status: 'new',
       createdAt: new Date().toISOString(),
     };
-    return apiPost<Order>('/orders', order, fallback);
+    return apiPost<Order>('/api/orders', order, fallback);
   },
   trackOrder: (query: string) =>
-    apiGet<Order[]>(`/orders/track?q=${encodeURIComponent(query)}`, []),
+    apiGet<Order[]>(`/api/orders/track?q=${encodeURIComponent(query)}`, []),
   updateOrderStatus: (id: string, status: OrderStatus) =>
-    apiPatch<Order>(`/orders/${id}/status`, { status }, {
+    apiPatch<Order>(`/api/orders/${id}/status`, { status }, {
       id,
       status,
     } as unknown as Order),
@@ -430,7 +430,7 @@ export const api = {
       discountValue: number;
       discountAmount: number;
     }>(
-      '/promo-codes/validate',
+      '/api/promo-codes/validate',
       { code, subtotal },
       {
         code: code.toUpperCase(),
@@ -439,13 +439,13 @@ export const api = {
         discountAmount: 0,
       },
     ),
-  getPromoCodes: () => apiGet<PromoCode[]>('/promo-codes', []),
+  getPromoCodes: () => apiGet<PromoCode[]>('/api/promo-codes', []),
   createPromoCode: (data: {
     code: string;
     discountType: 'percent' | 'fixed';
     discountValue: number;
   }) =>
-    apiPost<PromoCode>('/promo-codes', data, {
+    apiPost<PromoCode>('/api/promo-codes', data, {
       id: Date.now(),
       ...data,
       code: data.code.toUpperCase(),
@@ -453,18 +453,22 @@ export const api = {
     }),
   togglePromoCode: (id: number | string, active: boolean) =>
     apiPatch<{ success: boolean; active: boolean }>(
-      `/promo-codes/${id}`,
+      `/api/promo-codes/${id}`,
       { active },
       { success: true, active },
     ),
   deletePromoCode: (id: number | string) =>
-    apiDelete<{ success: boolean }>(`/promo-codes/${id}`, { success: true }),
+    apiDelete<{ success: boolean }>(`/api/promo-codes/${id}`, { success: true }),
 
   // Admin auth
   adminLogin: (username: string, password: string) =>
-    apiPost<{ token: string }>('/auth/login', { username, password }, {
-      token: 'mock-admin-token',
-    }),
+    apiPost<{ token: string }>(
+      '/api/auth/login',
+      { username, password },
+      {
+        token: 'mock-admin-token',
+      },
+    ),
 };
 
 export { MOCK_PRODUCTS, MOCK_GOVERNORATES, MOCK_ORDERS };

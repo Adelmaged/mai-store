@@ -325,5 +325,9 @@ app.delete('/api/promo-codes/:id', verifyAdmin, async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`MAI Store Backend running on http://localhost:${PORT}`));
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`MAI Store Backend running on http://localhost:${PORT}`));
+}
+
+module.exports = app;
